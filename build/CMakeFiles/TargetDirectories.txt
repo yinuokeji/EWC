@@ -408,7 +408,6 @@ C:/Users/YN/Desktop/esp/softAP/build/esp-idf/asio/CMakeFiles/install.dir
 C:/Users/YN/Desktop/esp/softAP/build/esp-idf/asio/CMakeFiles/edit_cache.dir
 C:/Users/YN/Desktop/esp/softAP/build/esp-idf/asio/CMakeFiles/rebuild_cache.dir
 C:/Users/YN/Desktop/esp/softAP/build/esp-idf/asio/CMakeFiles/list_install_components.dir
-C:/Users/YN/Desktop/esp/softAP/build/esp-idf/bt/CMakeFiles/__idf_bt.dir
 C:/Users/YN/Desktop/esp/softAP/build/esp-idf/bt/CMakeFiles/install/local.dir
 C:/Users/YN/Desktop/esp/softAP/build/esp-idf/bt/CMakeFiles/install.dir
 C:/Users/YN/Desktop/esp/softAP/build/esp-idf/bt/CMakeFiles/edit_cache.dir
