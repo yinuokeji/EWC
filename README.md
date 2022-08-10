@@ -25,8 +25,11 @@ In the `Component config` menu:
 
 * Set the `ESP32-Specific` menu:
 
-    * Unset the `Hardeare brownout detect&reset` 
+    * Unset the `Hardeare brownout detect&reset`
 
+* Set the `APP Configuration` menu:
+    * Set the `Device Configuration` menu:
+        * Click to `Slect the type of the device.`,can choice 10A or 16A device,and config the acouunt and passward for devide.
 
 ## Build and Flash
 * [ESP-IDF Getting Started Guide on ESP32](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html)

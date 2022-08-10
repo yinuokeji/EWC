@@ -70,7 +70,7 @@ void data_Upload_again()
 {
     while(1){
          Upload_again_work();
-         vTaskDelay(500 / portTICK_PERIOD_MS);
+         vTaskDelay(60000 / portTICK_PERIOD_MS);
     }
     //
 }

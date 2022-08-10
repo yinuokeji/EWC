@@ -11,36 +11,51 @@
 #include "app_blufi.h"
 #include "NVS.h"
 
+#ifdef CONFIG_SOCKET_10A
+    #define ACCOUNT CONFIG_SOCKET_ACCOUNT
+    #define PASSWORD CONFIG_SOCKET_PASSWORD
+#elif  CONFIG_SOCKET_16A
+    #define ACCOUNT CONFIG_SOCKET_ACCOUNT
+    #define PASSWORD CONFIG_SOCKET_PASSWORD
+#endif
+
 static const char *TAG = "COMM";
 static const int CONNECTED_BIT = BIT0;
 static const int EVENT_DATA_BIT = BIT0;
+
+static esp_mqtt_client_handle_t client;
+static EventGroupHandle_t mqtt_event_group = NULL;
+static EventGroupHandle_t mqtt_event_data  = NULL;
+
+esp_mqtt_event_handle_t data_event;
+
+topic topic_t;
 
 char    res_message[200];//接受到的数据
 char    res_topic[76];//拆分出的主题
 int     msg_len = 0;
 int     mqtt_flag;
-static esp_mqtt_client_handle_t client;
-static EventGroupHandle_t mqtt_event_group = NULL;
-static EventGroupHandle_t mqtt_event_data  = NULL;
-esp_mqtt_event_handle_t data_event;
-
-topic topic_t;
-
-char ProductKey[9];
-char deviceNo[8] = {0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x31};
-
+char    ProductKey[9];
+char    deviceNo[8] = {0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x31};
 char    new_host[16];
 int16_t new_port;
 
 /*主题组装*/
-static void topic_packed(const char *BE_CODE)
+static void topic_init(const char *BE_CODE)
 {
-    strcpy(topic_t.SUB_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/set");
-    strcpy(topic_t.SUB_RESP_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/setResp");
-    strcpy(topic_t.PUB_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/update");
-    strcpy(topic_t.PUB_RESP_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/updateResp");
-    strcpy(topic_t.BEAT_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/heartbeat");
-    strcpy(topic_t.BEAT_RESP_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/heartbeatResp");
+    sprintf(topic_t.SUB_TOPIC,"/%9s/%s/user/set",BE_CODE,BE_CODE);
+    sprintf(topic_t.SUB_RESP_TOPIC,"/%9s/%s/user/setResp",BE_CODE,BE_CODE);
+    sprintf(topic_t.PUB_TOPIC,"/%9s/%s/user/update",BE_CODE,BE_CODE);
+    sprintf(topic_t.PUB_RESP_TOPIC,"/%9s/%s/user/updateResp",BE_CODE,BE_CODE);
+    sprintf(topic_t.BEAT_TOPIC,"/%9s/%s/user/heartbeat",BE_CODE,BE_CODE);
+    sprintf(topic_t.BEAT_RESP_TOPIC,"/%9s/%s/user/heartbeatResp",BE_CODE,BE_CODE);
+    strcpy(deviceNo,BE_CODE+9);
+    // strcpy(topic_t.SUB_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/set");
+    // strcpy(topic_t.SUB_RESP_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/setResp");
+    // strcpy(topic_t.PUB_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/update");
+    // strcpy(topic_t.PUB_RESP_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/updateResp");
+    // strcpy(topic_t.BEAT_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/heartbeat");
+    // strcpy(topic_t.BEAT_RESP_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/heartbeatResp");
 }
 /*MQTT事件回调*/
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
@@ -107,20 +122,11 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 */
 void app_mqtt_client_init(int parm)
 {
-    #if 0
-    /* The context is used by the DS peripheral, should not be freed */
-    void *ds_data = esp_read_ds_data_from_nvs();
-    if (ds_data == NULL) {
-        ESP_LOGE(TAG, "Error in reading DS data from NVS");
-        vTaskDelete(NULL);
-    }
-    #endif
-
     const esp_mqtt_client_config_t mqtt_cfg = {
         .uri       = "mqtt://msgtest.haierbiomedical.com",//海尔生物医疗大数据平台
         .port      = 1777,                               // MQTT服务器端口
-        .username  = "BE17C9M0100000000001",
-        .password  = "BA241597712716267520",
+        .username  = ACCOUNT,
+        .password  = PASSWORD,
         .client_id = "esp32",
         //.host = "106.15.47.64", // MQTT服务器地址
         //.keepalive=60
@@ -133,16 +139,9 @@ void app_mqtt_client_init(int parm)
     const esp_mqtt_client_config_t mqtt_new_cfg = {
         .host      = new_host,
         .port      = new_port,
-        .username  = "BE17C9M0100000000001",
-        .password  = "BA241597712716267520",
+        .username  = ACCOUNT,
+        .password  = PASSWORD,
         .client_id = "esp32",
-        //.host = "106.15.47.64", // MQTT服务器地址
-        //.keepalive=60
-        //.event_handle = mqtt_event_handler,
-        //.cert_pem =  (const char *)server_cert_pem_start,
-        //.client_cert_pem = (const char *)client_cert_pem_start,
-        //.client_key_pem = NULL,
-        //.ds_data = ds_data,
     };
 
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
@@ -262,22 +261,22 @@ static void comm_task(void *arg)
     mqtt_event_group = xEventGroupCreate();
     mqtt_event_data  = xEventGroupCreate();
     app_blufi_init();
-    topic_packed("gdgdgdhdjshjdkxshjeb"); 
+    topic_init(ACCOUNT); 
+
+    ip_flag = NVS_READ_INT8(IP_FLAG);//启用新IP
+    if(ip_flag < 0)
+    {
+        ip_flag = 0;
+    }
+    if(ip_flag){
+        first_in = true;
+    }
 
     while(1){
 
         switch(steps)
         {
             case 0:
-            ip_flag = NVS_READ_INT8(IP_FLAG);//启用新IP
-            if(ip_flag < 0)
-            {
-                ip_flag = 0;
-            }
-            if(ip_flag){
-                first_in = true;
-            }
-
             if(app_blufi_connected()){
                 ESP_LOGE(TAG, "-------blufi connect ok---------- \n");
                 if(first_in){//第一次连接

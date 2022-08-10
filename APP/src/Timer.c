@@ -48,27 +48,24 @@ static void overcurrent_handle (int16_t tmp,int16_t tmp_v)
         mqtt_publish_warn(PW_ALARM_FLAG);
     }   
 }
-
+int8_t nomral = 1;
 /*数据上传*/
 void delay_upload()
 {
-    int8_t nomral;
-
-    nomral =  NVS_READ_INT8(NOMRAL);
-    if(nomral < 0)//未设置
-    {
-        nomral = 10;
-        printf("nomral:%d\n",nomral);
-        NVS_WRITE_INT8(NOMRAL,10);
-    }
     printf("sod:%d\n",sod);
     if(sod >= nomral){
        printf("sod == nomral\n");
        mqtt_publish_data(upload);
 
-       overcurrent_handle (data_acquisition.cf,data_acquisition.cf_u);//实现过流保护，
-
-       sod = 0;
+        overcurrent_handle (data_acquisition.cf,data_acquisition.cf_u);//实现过流保护，
+        nomral =  NVS_READ_INT8(NOMRAL);
+        if(nomral < 0)//未设置
+        {
+            nomral = 60;
+            printf("nomral:%d\n",nomral);
+            NVS_WRITE_INT8(NOMRAL,60);
+        }
+        sod = 0;
     }
 }
 
