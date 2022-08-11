@@ -43,13 +43,19 @@ int16_t new_port;
 /*主题组装*/
 static void topic_init(const char *BE_CODE)
 {
-    sprintf(topic_t.SUB_TOPIC,"/%9s/%s/user/set",BE_CODE,BE_CODE);
-    sprintf(topic_t.SUB_RESP_TOPIC,"/%9s/%s/user/setResp",BE_CODE,BE_CODE);
-    sprintf(topic_t.PUB_TOPIC,"/%9s/%s/user/update",BE_CODE,BE_CODE);
-    sprintf(topic_t.PUB_RESP_TOPIC,"/%9s/%s/user/updateResp",BE_CODE,BE_CODE);
-    sprintf(topic_t.BEAT_TOPIC,"/%9s/%s/user/heartbeat",BE_CODE,BE_CODE);
-    sprintf(topic_t.BEAT_RESP_TOPIC,"/%9s/%s/user/heartbeatResp",BE_CODE,BE_CODE);
+    printf("%s\n",BE_CODE);
+    printf("%9.9s\n",BE_CODE);
+    sprintf(topic_t.SUB_TOPIC,"/%9.9s/%s/user/set",BE_CODE,BE_CODE);
+    sprintf(topic_t.SUB_RESP_TOPIC,"/%9.9s/%s/user/setResp",BE_CODE,BE_CODE);
+    sprintf(topic_t.PUB_TOPIC,"/%9.9s/%s/user/update",BE_CODE,BE_CODE);
+    sprintf(topic_t.PUB_RESP_TOPIC,"/%9.9s/%s/user/updateResp",BE_CODE,BE_CODE);
+    sprintf(topic_t.BEAT_TOPIC,"/%9.9s/%s/user/heartbeat",BE_CODE,BE_CODE);
+    sprintf(topic_t.BEAT_RESP_TOPIC,"/%9.9s/%s/user/heartbeatResp",BE_CODE,BE_CODE);
     strcpy(deviceNo,BE_CODE+9);
+    printf("%s\n",topic_t.SUB_TOPIC);
+    printf("%s\n",topic_t.PUB_TOPIC);
+    printf("%s\n",topic_t.BEAT_TOPIC);
+    
     // strcpy(topic_t.SUB_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/set");
     // strcpy(topic_t.SUB_RESP_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/setResp");
     // strcpy(topic_t.PUB_TOPIC,"/BE17C9M01/BE17C9M0100000000001/user/update");
@@ -288,6 +294,8 @@ static void comm_task(void *arg)
                     ESP_LOGE(TAG, "-------mqtt reconnect---------- \n");
                 }
                 steps = 1;
+                vTaskDelay(100);
+
             }
             break;
 
@@ -298,8 +306,7 @@ static void comm_task(void *arg)
                 app_mqtt_client_subscribe(topic_t.SUB_TOPIC, 1);
                 //app_mqtt_client_publish("/123456789/12345678/user/heartbeat","123",1); 
                 steps = 2;
-            }else
-            {
+            }else{
                 mqtt_flag = 0;
                 steps = 0;
             }
